@@ -1,8 +1,8 @@
 **/node_modules/
 **/dist/
 **/.env
-mini-oj-backend/sandbox/
-mini-oj-backend/temp/
+backend/sandbox/
+backend/temp/
 *.log
-mini-oj-backend/archive/
+backend/archive/
 .vscode/settings.json

@@ -13,9 +13,9 @@
 ## 目录结构
 
 - `frontend/`：Vue 前端。
-- `mini-oj-backend/`：Express API、判题 Worker 和集成测试。
-- `mini-oj-backend/routes/admin/`：按题目、比赛、讨论区拆分的管理员接口。
-- `mini-oj-backend/db/`：建表脚本、演示数据和旧库迁移脚本。
+- `backend/`：Express API、判题 Worker 和集成测试。
+- `backend/routes/admin/`：按题目、比赛、讨论区拆分的管理员接口。
+- `backend/db/`：建表脚本、演示数据和旧库迁移脚本。
 
 ## 本地运行
 
@@ -26,11 +26,11 @@
 在空 PostgreSQL 数据库 `mini_oj` 中运行：
 
 ~~~bash
-psql -d mini_oj -f mini-oj-backend/db/schema.sql
-psql -d mini_oj -f mini-oj-backend/db/seeds/demo_seed.sql
+psql -d mini_oj -f backend/db/schema.sql
+psql -d mini_oj -f backend/db/seeds/demo_seed.sql
 ~~~
 
-已有旧库先按需运行 `mini-oj-backend/db/migrations/fix_leaderboard_and_tests.sql` 和 `mini-oj-backend/db/migrations/curate_demo_problems.sql`，再运行 `mini-oj-backend/db/migrations/migrate_async_judge.sql`。后者增加提交输出字段及未完成提交索引；重复执行安全。`mini-oj-backend/db/migrations/curate_demo_problems.sql` 会删除无关联记录的旧占位题 9–11，并为题目 2–6 补充边界测试点。
+已有旧库先按需运行 `backend/db/migrations/fix_leaderboard_and_tests.sql` 和 `backend/db/migrations/curate_demo_problems.sql`，再运行 `backend/db/migrations/migrate_async_judge.sql`。后者增加提交输出字段及未完成提交索引；重复执行安全。`backend/db/migrations/curate_demo_problems.sql` 会删除无关联记录的旧占位题 9–11，并为题目 2–6 补充边界测试点。
 
 ### 2. 启动 Redis 并拉取判题镜像
 
@@ -45,9 +45,9 @@ Compose 将 Redis 仅绑定在本机 `127.0.0.1:6379`，并启用 AOF 持久化�
 
 ### 3. 启动 API 与 Worker
 
-复制 `mini-oj-backend/.env.example` 为 `mini-oj-backend/.env`，填写数据库连接和至少 32 字符的随机 `JWT_SECRET`。Redis 默认连接本机 6379 端口；可通过 `JUDGE_CONCURRENCY` 设置单个 Worker 的并发任务数，程序将其限制在 1–4。
+复制 `backend/.env.example` 为 `backend/.env`，填写数据库连接和至少 32 字符的随机 `JWT_SECRET`。Redis 默认连接本机 6379 端口；可通过 `JUDGE_CONCURRENCY` 设置单个 Worker 的并发任务数，程序将其限制在 1–4。
 
-在 `mini-oj-backend` 目录安装依赖后，分别打开两个终端运行：
+在 `backend` 目录安装依赖后，分别打开两个终端运行：
 
 ~~~bash
 npm ci
@@ -92,12 +92,12 @@ npm run dev
 
 ## 自动化测试
 
-启动 PostgreSQL、Redis 和 Docker 后，在 `mini-oj-backend` 运行 `npm test`。测试会创建独立的临时数据库和 Redis 队列，启动测试专用 API 与 Worker，验证排行榜去重、管理员权限，以及真实 Docker 判题的 AC、编译错误和超时结果。结束时会删除测试数据库和队列，不使用当前业务数据。
+启动 PostgreSQL、Redis 和 Docker 后，在 `backend` 运行 `npm test`。测试会创建独立的临时数据库和 Redis 队列，启动测试专用 API 与 Worker，验证排行榜去重、管理员权限，以及真实 Docker 判题的 AC、编译错误和超时结果。结束时会删除测试数据库和队列，不使用当前业务数据。
 
 `.github/workflows/ci.yml` 在推送与拉取请求时启动 PostgreSQL、Redis，安装依赖、构建前端并运行同一组后端测试。
 ## 数据模型与边界
 
-主要表为 `users`、`problems`、`test_cases`、`submissions`、`posts`、`comments`、`contests` 和 `contest_problems`。结构见 `mini-oj-backend/db/schema.sql`。BullMQ 任务只保存提交 ID，代码和判题结果保存在 PostgreSQL；Worker 重试时只会更新尚未完成的提交。
+主要表为 `users`、`problems`、`test_cases`、`submissions`、`posts`、`comments`、`contests` 和 `contest_problems`。结构见 `backend/db/schema.sql`。BullMQ 任务只保存提交 ID，代码和判题结果保存在 PostgreSQL；Worker 重试时只会更新尚未完成的提交。
 
 这是单机演示项目。判题 Worker 持有 Docker 调用权限；若对公网开放，应将 Worker 部署到独立主机或虚拟机，并补充限流、监控和容器安全审查。
 

@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install backend dependencies
-        working-directory: mini-oj-backend
+        working-directory: backend
         run: npm ci
       - name: Install frontend dependencies
         working-directory: frontend
@@ -61,5 +61,5 @@ jobs:
       - name: Pull judge image
         run: docker pull gcc:latest
       - name: Run backend integration tests
-        working-directory: mini-oj-backend
+        working-directory: backend
         run: npm test
