@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: test-password
+      DB_ADMIN_DATABASE: postgres
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      JWT_SECRET: ci-integration-test-secret-at-least-32-characters
+      JUDGE_IMAGE: gcc:latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Install backend dependencies
+        working-directory: mini-oj-backend
+        run: npm ci
+      - name: Install frontend dependencies
+        working-directory: mini-oj-fronted
+        run: npm ci
+      - name: Build frontend
+        working-directory: mini-oj-fronted
+        run: npm run build
+      - name: Pull judge image
+        run: docker pull gcc:latest
+      - name: Run backend integration tests
+        working-directory: mini-oj-backend
+        run: npm test
