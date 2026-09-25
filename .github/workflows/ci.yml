@@ -53,10 +53,10 @@ jobs:
         working-directory: mini-oj-backend
         run: npm ci
       - name: Install frontend dependencies
-        working-directory: mini-oj-fronted
+        working-directory: frontend
         run: npm ci
       - name: Build frontend
-        working-directory: mini-oj-fronted
+        working-directory: frontend
         run: npm run build
       - name: Pull judge image
         run: docker pull gcc:latest

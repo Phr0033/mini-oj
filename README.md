@@ -10,6 +10,13 @@
 - **后台管理**：管理员可发布和编辑题目及测试点，发布和删除比赛，删除讨论区帖子与评论。关键关联写入与删除使用数据库事务。
 - **讨论区**：支持 Markdown 帖子与评论；渲染前清理不安全的 HTML。
 
+## 目录结构
+
+- `frontend/`：Vue 前端。
+- `mini-oj-backend/`：Express API、判题 Worker 和集成测试。
+- `mini-oj-backend/routes/admin/`：按题目、比赛、讨论区拆分的管理员接口。
+- `mini-oj-backend/db/`：建表脚本、演示数据和旧库迁移脚本。
+
 ## 本地运行
 
 需要 Node.js 20.19+、PostgreSQL 和 Docker Desktop 或 Docker Engine。Docker 用于 Redis 和判题容器。判题镜像默认为 `gcc:latest`。
@@ -19,11 +26,11 @@
 在空 PostgreSQL 数据库 `mini_oj` 中运行：
 
 ~~~bash
-psql -d mini_oj -f mini-oj-backend/schema.sql
-psql -d mini_oj -f mini-oj-backend/demo_seed.sql
+psql -d mini_oj -f mini-oj-backend/db/schema.sql
+psql -d mini_oj -f mini-oj-backend/db/seeds/demo_seed.sql
 ~~~
 
-已有旧库先按需运行 `fix_leaderboard_and_tests.sql` 和 `curate_demo_problems.sql`，再运行 `migrate_async_judge.sql`。后者增加提交输出字段及未完成提交索引；重复执行安全。`curate_demo_problems.sql` 会删除无关联记录的旧占位题 9–11，并为题目 2–6 补充边界测试点。
+已有旧库先按需运行 `mini-oj-backend/db/migrations/fix_leaderboard_and_tests.sql` 和 `mini-oj-backend/db/migrations/curate_demo_problems.sql`，再运行 `mini-oj-backend/db/migrations/migrate_async_judge.sql`。后者增加提交输出字段及未完成提交索引；重复执行安全。`mini-oj-backend/db/migrations/curate_demo_problems.sql` 会删除无关联记录的旧占位题 9–11，并为题目 2–6 补充边界测试点。
 
 ### 2. 启动 Redis 并拉取判题镜像
 
@@ -59,14 +66,14 @@ UPDATE users SET is_admin = TRUE WHERE username = 'your_username';
 
 ### 4. 启动前端
 
-在 `mini-oj-fronted` 目录运行：
+在 `frontend` 目录运行：
 
 ~~~bash
 npm ci
 npm run dev
 ~~~
 
-前端默认请求本机 3000 端口；部署到其他机器时，按 `mini-oj-fronted/.env.example` 设置 `VITE_API_BASE_URL` 后运行 `npm run build`。
+前端默认请求本机 3000 端口；部署到其他机器时，按 `frontend/.env.example` 设置 `VITE_API_BASE_URL` 后运行 `npm run build`。
 
 ## 主要接口
 
@@ -90,7 +97,7 @@ npm run dev
 `.github/workflows/ci.yml` 在推送与拉取请求时启动 PostgreSQL、Redis，安装依赖、构建前端并运行同一组后端测试。
 ## 数据模型与边界
 
-主要表为 `users`、`problems`、`test_cases`、`submissions`、`posts`、`comments`、`contests` 和 `contest_problems`。结构见 `mini-oj-backend/schema.sql`。BullMQ 任务只保存提交 ID，代码和判题结果保存在 PostgreSQL；Worker 重试时只会更新尚未完成的提交。
+主要表为 `users`、`problems`、`test_cases`、`submissions`、`posts`、`comments`、`contests` 和 `contest_problems`。结构见 `mini-oj-backend/db/schema.sql`。BullMQ 任务只保存提交 ID，代码和判题结果保存在 PostgreSQL；Worker 重试时只会更新尚未完成的提交。
 
 这是单机演示项目。判题 Worker 持有 Docker 调用权限；若对公网开放，应将 Worker 部署到独立主机或虚拟机，并补充限流、监控和容器安全审查。
 

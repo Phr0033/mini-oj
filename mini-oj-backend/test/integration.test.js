@@ -108,8 +108,8 @@ before(async () => {
     await adminDb.query(`CREATE DATABASE "${dbName}"`);
     testDb = new Client({ ...dbOptions, database: dbName });
     await testDb.connect();
-    await testDb.query(fs.readFileSync(path.join(backendDir, 'schema.sql'), 'utf8'));
-    await testDb.query(fs.readFileSync(path.join(backendDir, 'demo_seed.sql'), 'utf8'));
+    await testDb.query(fs.readFileSync(path.join(backendDir, 'db', 'schema.sql'), 'utf8'));
+    await testDb.query(fs.readFileSync(path.join(backendDir, 'db', 'seeds', 'demo_seed.sql'), 'utf8'));
 
     const port = await freePort();
     baseUrl = `http://127.0.0.1:${port}`;
@@ -189,6 +189,9 @@ test('管理员接口拒绝普通用户，允许题目和讨论区管理', async
         title: '权限测试题', description: '输出 1', time_limit: 1000, memory_limit: 256,
         test_cases: [{ input_data: '', output_data: '1' }]
     };
+    assert.equal((await request('/admin/contest', { method: 'POST', body: {} })).code, 401);
+    assert.equal((await request('/admin/contest', { token: normalToken, method: 'POST', body: {} })).code, 403);
+    assert.equal((await request('/admin/contest', { token: adminToken, method: 'POST', body: {} })).code, 400);
     assert.equal((await request('/admin/problem', { method: 'POST', body: payload })).code, 401);
     assert.equal((await request('/admin/problem', { token: normalToken, method: 'POST', body: payload })).code, 403);
     assert.equal((await request('/admin/problem', { token: adminToken, method: 'POST', body: payload })).code, 200);
