@@ -15,7 +15,7 @@
 - `frontend/`：Vue 前端。
 - `backend/`：Express API、判题 Worker 和集成测试。
 - `backend/routes/admin/`：按题目、比赛、讨论区拆分的管理员接口。
-- `backend/db/`：建表脚本、演示数据和旧库迁移脚本。
+- `backend/db/`：建表脚本和演示数据。
 
 ## 本地运行
 
@@ -29,8 +29,6 @@
 psql -d mini_oj -f backend/db/schema.sql
 psql -d mini_oj -f backend/db/seeds/demo_seed.sql
 ~~~
-
-已有旧库先按需运行 `backend/db/migrations/fix_leaderboard_and_tests.sql` 和 `backend/db/migrations/curate_demo_problems.sql`，再运行 `backend/db/migrations/migrate_async_judge.sql`。后者增加提交输出字段及未完成提交索引；重复执行安全。`backend/db/migrations/curate_demo_problems.sql` 会删除无关联记录的旧占位题 9–11，并为题目 2–6 补充边界测试点。
 
 ### 2. 启动 Redis 并拉取判题镜像
 
