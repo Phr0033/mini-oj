@@ -1,27 +1,54 @@
 <script setup>
-import { ref, watchEffect } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { API_BASE_URL } from './api'
 
 const router = useRouter()
 const route = useRoute()
 const username = ref('')
 const isAdmin = ref(false)
 
-// Vue 的监听魔法：只要路由发生跳转，就去本地拿一下最新的名字
-watchEffect(() => {
-  // route.path 只是为了触发这里的重新执行
-  if(route.path) {
-    username.value = localStorage.getItem('oj_username') || ''
-    isAdmin.value = localStorage.getItem('oj_is_admin') === 'true'
-  }
-})
-
-// 退出登录函数
-const logout = () => {
-  // 销毁通行证
+const clearSession = () => {
   localStorage.removeItem('oj_token')
   localStorage.removeItem('oj_username')
   localStorage.removeItem('oj_is_admin')
+  username.value = ''
+  isAdmin.value = false
+}
+
+const refreshSession = async () => {
+  const token = localStorage.getItem('oj_token')
+  username.value = localStorage.getItem('oj_username') || ''
+  isAdmin.value = false
+  if (!token || route.path === '/login') return
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store'
+    })
+    if (localStorage.getItem('oj_token') !== token) return
+    if (response.status === 401 || response.status === 403) {
+      clearSession()
+      router.replace('/login')
+      return
+    }
+    if (!response.ok) return
+    const result = await response.json()
+    if (result.status !== 'success') return
+    username.value = result.data.username
+    isAdmin.value = result.data.isAdmin === true
+    localStorage.setItem('oj_username', username.value)
+    localStorage.setItem('oj_is_admin', String(isAdmin.value))
+  } catch (error) {
+    console.error('获取当前用户权限失败:', error)
+  }
+}
+
+watch(() => route.path, refreshSession, { immediate: true })
+
+const logout = () => {
+  clearSession()
   router.push('/login')
 }
 </script>

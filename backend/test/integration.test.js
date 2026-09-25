@@ -156,6 +156,23 @@ after(async () => {
     }
 });
 
+test('当前用户接口返回最新管理员权限', async () => {
+    assert.equal((await request('/user/me')).code, 401);
+    const admin = await request('/user/me', { token: adminToken });
+    assert.equal(admin.code, 200);
+    assert.deepEqual(admin.body.data, { username: 'admin_test', isAdmin: true });
+    const normal = await request('/user/me', { token: normalToken });
+    assert.deepEqual(normal.body.data, { username: 'normal_test', isAdmin: false });
+
+    await testDb.query('UPDATE users SET is_admin = FALSE WHERE id = $1', [adminId]);
+    try {
+        const updated = await request('/user/me', { token: adminToken });
+        assert.equal(updated.body.data.isAdmin, false);
+    } finally {
+        await testDb.query('UPDATE users SET is_admin = TRUE WHERE id = $1', [adminId]);
+    }
+});
+
 test('排行榜按已通过题目去重，排队记录不改变通过率', async () => {
     const insert = (problemId, result) => testDb.query(
         'INSERT INTO submissions (user_id, problem_id, code, result) VALUES ($1, $2, $3, $4)',

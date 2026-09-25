@@ -82,6 +82,7 @@ npm run dev
 | POST | `/submit` | 创建提交并返回提交 ID，HTTP 202 |
 | GET | `/submission/:id` | 登录用户查询自己的评测状态与结果 |
 | GET | `/status`、`/leaderboard`、`/user/status` | 提交动态、排行榜与个人做题状态 |
+| GET | `/user/me` | 获取当前登录用户及实时管理员权限 |
 | GET/POST/PUT/DELETE | `/admin/problem` 相关路径 | 管理员维护题目与测试点 |
 | GET | `/list`、`/:id/problems` | 比赛列表与赛题 |
 | POST/DELETE | `/admin/contest`、`/admin/contest/:id` | 管理员发布或删除比赛 |

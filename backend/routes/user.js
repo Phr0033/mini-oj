@@ -78,6 +78,13 @@ router.post('/login', async (req, res) => {
 });
 
 
+router.get('/user/me', authenticateToken, (req, res) => {
+    res.json({
+        status: 'success',
+        data: { username: req.user.username, isAdmin: Boolean(req.user.is_admin) }
+    });
+});
+
 // ================= API: 获取当前用户的做题状态 =================
 router.get('/user/status', authenticateToken, async (req, res) => {
     try {
